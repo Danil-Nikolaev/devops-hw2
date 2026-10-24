@@ -1,0 +1,20 @@
+---
+__pg_bin_dir: "/usr/lib/postgresql/{{ postgres__version }}/bin"
+__postgres_service: postgresql-hw2.service
+__default_postgres_service: "postgresql@{{ postgres__version }}-main.service"
+
+__exporter_service: postgres-exporter.service
+__exporter_os_user: postgres-exporter
+__exporter_binary: /usr/local/bin/postgres_exporter
+__exporter_env_file: /etc/default/postgres-exporter
+__exporter_download_dir: "/tmp/postgres-exporter-{{ postgres__exporter_version }}"
+__exporter_arch_map:
+  aarch64: arm64
+  x86_64: amd64
+__exporter_arch: "{{ __exporter_arch_map[ansible_facts['architecture']] }}"
+__exporter_archive_name: >-
+  postgres_exporter-{{ postgres__exporter_version }}.linux-{{ __exporter_arch }}
+__exporter_url: >-
+  https://github.com/prometheus-community/postgres_exporter/releases/download/v{{ postgres__exporter_version }}/{{ __exporter_archive_name }}.tar.gz
+__first_host: "{{ ansible_play_hosts_all | sort | first }}"
+

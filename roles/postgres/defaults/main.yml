@@ -1,0 +1,29 @@
+---
+postgres__version: "16"
+postgres__data_dir: /data/postgres/data
+
+postgres__opts:
+  listen_addresses: "'127.0.0.1'"
+  port: 5432
+  unix_socket_directories: "'/var/run/postgresql'"
+  password_encryption: "'scram-sha-256'"
+
+postgres__hba_rules:
+  - type: local
+    database: all
+    user: all
+    method: peer
+  - type: host
+    database: all
+    user: all
+    address: 127.0.0.1/32
+    method: scram-sha-256
+
+postgres__users: []
+postgres__databases: []
+
+postgres__exporter_version: "0.20.1"
+postgres__exporter_port: 9187
+postgres__exporter_db_user: postgres_exporter
+postgres__exporter_db_password: ""
+
