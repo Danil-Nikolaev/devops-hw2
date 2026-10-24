@@ -1,0 +1,49 @@
+---
+- name: Configure postgresql.conf
+  ansible.builtin.lineinfile:
+    path: "{{ postgres__data_dir }}/postgresql.conf"
+    regexp: "^#?{{ item.key | regex_escape() }}\\s*="
+    line: "{{ item.key }} = {{ item.value }}"
+    create: false
+  loop: "{{ postgres__opts | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  notify:
+    - Restart PostgreSQL
+
+- name: Configure pg_hba.conf
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: "{{ postgres__data_dir }}/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: "0600"
+  notify:
+    - Restart PostgreSQL
+
+- name: Install PostgreSQL systemd service
+  ansible.builtin.template:
+    src: postgresql-hw2.service.j2
+    dest: "/etc/systemd/system/{{ __postgres_service }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Daemon reload
+    - Restart PostgreSQL
+
+- name: Apply PostgreSQL handlers before health checks
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start PostgreSQL service
+  ansible.builtin.systemd_service:
+    name: "{{ __postgres_service }}"
+    enabled: true
+    state: started
+
+- name: Check PostgreSQL with SELECT 1
+  ansible.builtin.command:
+    cmd: "{{ __pg_bin_dir }}/psql -d postgres -tAc 'SELECT 1'"
+  become_user: postgres
+  changed_when: false
+
