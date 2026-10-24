@@ -1,0 +1,48 @@
+---
+- name: Install PostgreSQL packages
+  ansible.builtin.apt:
+    name:
+      - acl
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+      - ca-certificates
+    update_cache: true
+    state: present
+
+- name: Stop and disable the package-created cluster
+  ansible.builtin.systemd_service:
+    name: "{{ __default_postgres_service }}"
+    enabled: false
+    state: stopped
+
+- name: Create /data directory
+  ansible.builtin.file:
+    path: /data
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create PostgreSQL parent directory
+  ansible.builtin.file:
+    path: "{{ postgres__data_dir | dirname }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0700"
+
+- name: Create PostgreSQL data directory
+  ansible.builtin.file:
+    path: "{{ postgres__data_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0700"
+
+- name: Initialize PostgreSQL cluster
+  ansible.builtin.command:
+    cmd: "{{ __pg_bin_dir }}/pg_ctl initdb -D {{ postgres__data_dir }}"
+    creates: "{{ postgres__data_dir }}/PG_VERSION"
+  become_user: postgres
+
