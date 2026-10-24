@@ -1,0 +1,39 @@
+---
+postgres__opts:
+  listen_addresses: "'127.0.0.1'"
+  port: 5432
+  max_connections: 100
+  shared_buffers: "'128MB'"
+  unix_socket_directories: "'/var/run/postgresql'"
+  password_encryption: "'scram-sha-256'"
+
+postgres__hba_rules:
+  - type: local
+    database: all
+    user: all
+    method: peer
+  - type: host
+    database: all
+    user: all
+    address: 127.0.0.1/32
+    method: scram-sha-256
+  - type: host
+    database: all
+    user: all
+    address: ::1/128
+    method: scram-sha-256
+
+postgres__users:
+  - name: app_user
+    password: "{{ vault_postgres_app_password }}"
+  - name: postgres_exporter
+    password: "{{ vault_postgres_exporter_password }}"
+
+postgres__databases:
+  - name: app_db
+    owner: app_user
+    encoding: UTF8
+
+postgres__exporter_db_user: postgres_exporter
+postgres__exporter_db_password: "{{ vault_postgres_exporter_password }}"
+
