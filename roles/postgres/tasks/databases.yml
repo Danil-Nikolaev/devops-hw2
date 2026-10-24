@@ -1,0 +1,37 @@
+---
+- name: Create PostgreSQL users
+  community.postgresql.postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password | default(omit) }}"
+    role_attr_flags: "{{ item.role_attr_flags | default(omit) }}"
+    state: "{{ item.state | default(omit) }}"
+    login_unix_socket: /var/run/postgresql
+  become_user: postgres
+  loop: "{{ postgres__users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  no_log: true
+
+- name: Grant pg_monitor to postgres-exporter
+  community.postgresql.postgresql_membership:
+    target_roles:
+      - "{{ postgres__exporter_db_user }}"
+    memberships:
+      - groups:
+          - pg_monitor
+    state: present
+    login_unix_socket: /var/run/postgresql
+  become_user: postgres
+
+- name: Create PostgreSQL databases
+  community.postgresql.postgresql_db:
+    name: "{{ item.name }}"
+    owner: "{{ item.owner | default(omit) }}"
+    encoding: "{{ item.encoding | default(omit) }}"
+    state: "{{ item.state | default(omit) }}"
+    login_unix_socket: /var/run/postgresql
+  become_user: postgres
+  loop: "{{ postgres__databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+
